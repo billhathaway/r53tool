@@ -15,14 +15,6 @@ import (
 
 var region = "us-east-1"
 
-// awsString turns the pointers back to strings without needless nil checking each time
-func awsString(val aws.StringValue) string {
-	if val == nil {
-		return ""
-	}
-	return *val
-}
-
 // zoneIDByName takes a record name and returns the Route53 zone ID
 // TODO: handle paging
 func zoneIDByName(r53 *route53.Route53, name string) (string, error) {
@@ -100,7 +92,7 @@ func getResourceRecordSet(r53 *route53.Route53, zoneID string, recordName string
 
 func usage() {
 	example := `
-	Usage: r53cli [options] ipaddr <ipaddr2 ipaddr3 ...>
+	Usage: r53tool [options] ipaddr <ipaddr2 ipaddr3 ...>
 
 	options
 	--
