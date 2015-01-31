@@ -7,16 +7,32 @@ It is still very early in development which could cause bad things to happen and
 
 It also depends on the very unstable auto-generated AWS SDK.
 
-	Usage: r53tool [options] ipaddr <ipaddr2 ipaddr3 ...>  
+	Usage: r53tool [flags] ipaddr <ipaddr2 ipaddr3 ...>
 
-	required flags  
-	--  
-	-name="record.example.com.": record name  
-	-setid="": record set identifier  
+					required flags
+					--
+					-name="record.example.com.": record name
+					-setid="": record set identifier
 
-	optional flags  
-	--  
-	-v=false: verbose  
-	-region="us-east-1": AWS region  
-	-type="A": record type  
+					optional flags
+					--
+					-cmd="add" or "del" (defaults to add)
+					-v=false: verbose
+					-region="us-east-1": AWS region
+					-type="A": record type (currently only A is supported)
+
+
+	This tool will update Route53 resource record sets by adding or removing IPs.
+	Currently the resource record sets needs to already exist.
+
+	Standard AWS environment variables are used to supply authentication credentials
+
+	Examples:
+	  # adding IPs
+		r53tool -name=www.example.com -setid dc1 192.168.1.1 192.168.1.2
+
+		# deleting IPs
+		r53tool -cmd=del -name=www.example.com -setid dc1 192.168.1.1 192.168.1.2
+
+
 
