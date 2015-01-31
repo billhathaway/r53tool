@@ -9,16 +9,14 @@ It also depends on the very unstable auto-generated AWS SDK.
 
 	Usage: r53tool [options] ipaddr <ipaddr2 ipaddr3 ...>  
 
-	options  
+	required flags  
 	--  
 	-name="record.example.com.": record name  
-	-region="us-east-1": AWS region  
 	-setid="": record set identifier  
-	-type="A": record type  
+
+	optional flags  
+	--  
 	-v=false: verbose  
-  
-	This tool will update Route53 record sets with additional resources.  
-
-	Standard AWS environment variables are used to supply authentication credentials.  
-
+	-region="us-east-1": AWS region  
+	-type="A": record type  
 
