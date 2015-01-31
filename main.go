@@ -112,7 +112,7 @@ func usage() {
 }
 
 func main() {
-	recordName := flag.String("name", "record.example.com", "record name")
+	recordName := flag.String("name", "", "record name")
 	recordType := flag.String("type", "A", "record type")
 	setID := flag.String("setid", "", "record set identifier")
 	region := flag.String("region", "us-east-1", "AWS region")
