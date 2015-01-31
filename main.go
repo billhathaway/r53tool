@@ -96,13 +96,8 @@ func getResourceRecordSet(r53 *route53.Route53, zoneID string, recordName string
 		return route53.ResourceRecordSet{}, err
 	}
 
-	// if no setID is passed, we verify only a single RRS exists
-	if setID == "" && len(resp.ResourceRecordSets) > 1 {
-		return route53.ResourceRecordSet{}, fmt.Errorf("no ResourceRecordSets setIdentifier specified and more than one found zoneID=%s recordName=%s recordType=%s\n", zoneID, recordName, recordType)
-	}
-
 	for _, rrs := range resp.ResourceRecordSets {
-		if setID == "" || *rrs.SetIdentifier == setID {
+		if *rrs.Name == recordName && *rrs.SetIdentifier == setID {
 			return rrs, nil
 		}
 	}
