@@ -62,9 +62,6 @@ func addToARecordResourceRecordSet(r53 *route53.Route53, zoneID string, rrs rout
 		return fmt.Errorf("at least one IP needs to be passed")
 	}
 	req := &route53.ChangeResourceRecordSetsRequest{HostedZoneID: aws.String(zoneID)}
-	// change := route53.Change{}
-	// change.ResourceRecordSet = &rrs
-	printResourceRecordSet(rrs)
 	for _, ip := range ips {
 		rrs.ResourceRecords = append(rrs.ResourceRecords, route53.ResourceRecord{Value: aws.String(ip)})
 	}
@@ -107,7 +104,7 @@ func usage() {
 
 	options
 	--
-	-name="sports.xre.bookmanager.org": record name
+	-name="record.example.com.": record name
 	-region="us-east-1": AWS region
 	-setid="": record set identifier
 	-type="A": record type
