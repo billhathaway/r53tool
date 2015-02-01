@@ -28,11 +28,11 @@ It also depends on the very unstable auto-generated AWS SDK.
 	Standard AWS environment variables are used to supply authentication credentials
 
 	Examples:
-	  # adding IPs
-		r53tool -name=www.example.com -setid dc1 192.168.1.1 192.168.1.2
+	# adding IPs (default cmd is add)
+	r53tool -name=www.example.com -setid dc1 192.168.1.1 192.168.1.2
 
-		# deleting IPs
-		r53tool -cmd=del -name=www.example.com -setid dc1 192.168.1.1 192.168.1.2
+	# deleting IPs
+	r53tool -cmd=del -name=www.example.com -setid dc1 192.168.1.1 192.168.1.2
 
 
 
