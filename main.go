@@ -24,33 +24,48 @@ type cli struct {
 	verbose bool
 }
 
-// zoneIDByName takes a record name and returns the Route53 zone ID
+// recordToZone takes a dot-ending name which might include several labels and strips it down to the last two labels
+func recordToZone(name string) (string, error) {
+	labels := strings.Split(name, ".")
+	if len(labels) < 3 {
+		return "", fmt.Errorf("name must have at least one period")
+	}
+	return strings.Join(labels[len(labels)-3:], "."), nil
+}
+
+// zoneIDByName takes a dot-ending record name and returns the Route53 zone ID
 // TODO: handle paging
-func (c *cli) zoneIDByName(name string) (string, error) {
-	resp, err := c.r53.ListHostedZones(&route53.ListHostedZonesRequest{})
+func (c *cli) zoneIDByName(recordName string) (string, error) {
+
+	name, err := recordToZone(recordName)
 	if err != nil {
 		return "", err
 	}
-	components := strings.Split(name, ".")
-	if len(components) < 3 {
-		return "", fmt.Errorf("name must have at least one period")
-	}
-	name = strings.Join(components[len(components)-3:], ".")
-	for _, zone := range resp.HostedZones {
-		if *zone.Name == name {
-			// zone.ID looks like /hostedzone/Z22CR2RGPPKRQB but we just want the last part
-			components := strings.Split(*zone.ID, "/")
-			if len(components) != 3 {
-				return "", fmt.Errorf("problem splitting id from %s\n", *zone.ID)
+	req := &route53.ListHostedZonesRequest{}
+	for {
+		resp, err := c.r53.ListHostedZones(req)
+		if err != nil {
+			return "", err
+		}
+		for _, zone := range resp.HostedZones {
+			if *zone.Name == name {
+				// zone.ID looks like /hostedzone/Z22CR2RGPPKRQB but we just want the last part
+				components := strings.Split(*zone.ID, "/")
+				if len(components) != 3 {
+					return "", fmt.Errorf("problem splitting id from %s\n", *zone.ID)
+				}
+				zoneID := components[len(components)-1]
+				if c.verbose {
+					c.log.Printf("zoneName=%s zoneID=%s\n", name, zoneID)
+				}
+				return zoneID, nil
 			}
-			zoneID := components[len(components)-1]
-			if c.verbose {
-				c.log.Printf("zoneName=%s zoneID=%s\n", name, zoneID)
+			if !*resp.IsTruncated {
+				return "", fmt.Errorf("zone %s not found", name)
 			}
-			return zoneID, nil
+			req.Marker = resp.NextMarker
 		}
 	}
-	return "", fmt.Errorf("zone %s not found", name)
 }
 
 // printResourceRecordSet is a pretty printer
@@ -110,7 +125,7 @@ func (c *cli) delFromARecordResourceRecordSet(zoneID string, rrs route53.Resourc
 		return err
 	}
 	if c.verbose {
-		c.log.Printf("ChangeResourceRecordSets response=%+v\n", resp)
+		c.log.Printf("ChangeResourceRecordSets response=%+v\n", *resp.ChangeInfo.Status)
 	}
 	return nil
 }
@@ -132,7 +147,7 @@ func (c *cli) addToARecordResourceRecordSet(zoneID string, rrs route53.ResourceR
 		return err
 	}
 	if c.verbose {
-		c.log.Printf("ChangeResourceRecordSets response=%+v\n", resp)
+		c.log.Printf("ChangeResourceRecordSets responseStatus=%+v responseComment=%s responseID=%+v\n", *resp.ChangeInfo.Status, *resp.ChangeInfo.Comment, *resp.ChangeInfo.ID)
 	}
 	return nil
 }
@@ -222,7 +237,7 @@ func main() {
 	auth, err := aws.EnvCreds()
 
 	if err != nil {
-		c.log.Fatal(err)
+		c.log.Fatal("ERROR setting auth ", err)
 
 	}
 
@@ -234,12 +249,12 @@ func main() {
 
 	zoneID, err := c.zoneIDByName(*recordName)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("ERROR getting zoneid ", err)
 	}
 
 	rrs, err := c.getResourceRecordSet(zoneID, *recordName, *recordType, *setID)
 	if err != nil {
-		c.log.Fatal(err)
+		c.log.Fatal("ERROR getting resource record set ", err)
 	}
 
 	if c.verbose {
@@ -250,15 +265,15 @@ func main() {
 	case "add":
 		err = c.addToARecordResourceRecordSet(zoneID, rrs, ips...)
 		if err != nil {
-			c.log.Fatal(err)
+			c.log.Fatal("ERROR adding to resource record set ", err)
 		}
 	case "del":
 		err = c.delFromARecordResourceRecordSet(zoneID, rrs, ips...)
 		if err != nil {
-			c.log.Fatal(err)
+			c.log.Fatal("ERROR deleting from resource record set ", err)
 		}
 	default:
-		usageFatal("action not implemented " + *action)
+		usageFatal("ERROR action not implemented " + *action)
 	}
 
 }
