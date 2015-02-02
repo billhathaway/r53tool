@@ -11,12 +11,12 @@ It also depends on the very unstable auto-generated AWS SDK.
 
 					required flags
 					--
+					-cmd="add" | "del" | "list"
 					-name="record.example.com.": record name
 					-setid="": record set identifier
 
 					optional flags
 					--
-					-cmd="add" or "del" (defaults to add)
 					-v=false: verbose
 					-region="us-east-1": AWS region
 					-type="A": record type (currently only A is supported)
@@ -28,11 +28,14 @@ It also depends on the very unstable auto-generated AWS SDK.
 	Standard AWS environment variables are used to supply authentication credentials
 
 	Examples:
-	# adding IPs (default cmd is add)
-	r53tool -name=www.example.com -setid dc1 192.168.1.1 192.168.1.2
+	# adding IPs 
+	r53tool -cmd=add -name=www.example.com -setid dc1 192.168.1.1 192.168.1.2
 
 	# deleting IPs
 	r53tool -cmd=del -name=www.example.com -setid dc1 192.168.1.1 192.168.1.2
+
+	# listing a rrs
+	r53tool -cmd=list -name=www.example.com -setid dc1
 
 
 

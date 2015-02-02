@@ -16,7 +16,7 @@ import (
 )
 
 const defaultRegion = "us-east-1"
-const version = "0.3"
+const version = "0.4"
 
 type cli struct {
 	r53     *route53.Route53
@@ -181,7 +181,7 @@ func usageFatal(message string) {
 
 					optional flags
 					--
-					-cmd="add" or "del" (defaults to add)
+					-cmd="add" | "del" | "list" (defaults to add)
 					-v=false: verbose
 					-region="us-east-1": AWS region
 					-type="A": record type (currently only A is supported)
@@ -194,10 +194,14 @@ func usageFatal(message string) {
 
 	Examples:
 	  # adding IPs
-		r53tool -name=www.example.com -setid dc1 192.168.1.1 192.168.1.2
+		r53tool -add -name=www.example.com -setid dc1 192.168.1.1 192.168.1.2
 
 		# deleting IPs
 		r53tool -cmd=del -name=www.example.com -setid dc1 192.168.1.1 192.168.1.2
+
+		# listing a resource record set
+		r53tool -cmd=list -name=www.example.com -setid dc1
+
 `
 	fmt.Println(message)
 	fmt.Println(example)
@@ -211,21 +215,24 @@ func main() {
 	setID := flag.String("setid", "", "record set identifier")
 	region := flag.String("region", defaultRegion, "AWS region")
 	verbose := flag.Bool("v", false, "verbose")
-	action := flag.String("cmd", "add", "add | del - action to take with IPs")
+	action := flag.String("cmd", "", "add | del | list - action")
 	flag.Parse()
 	c := &cli{
 		log: log.New(os.Stderr, "", log.LstdFlags),
 	}
 
 	ips := flag.Args()
-	if len(ips) == 0 {
-		usageFatal("ERROR: need one or more ipaddrs")
-	}
-	c.verbose = *verbose
 	switch *action {
 	case "add", "del":
+		if len(ips) == 0 {
+			usageFatal(fmt.Sprintf("ERROR: %s needs one or more ipaddrs", *action))
+		}
+	case "list":
+		if len(ips) != 0 {
+			usageFatal("ERROR: list does not take any ipaddrs")
+		}
 	default:
-		usageFatal("ERROR: supported cmd values are add | del")
+		usageFatal("ERROR: supported commands are add|del|list")
 	}
 
 	switch *recordType {
@@ -235,11 +242,12 @@ func main() {
 	}
 
 	auth, err := aws.EnvCreds()
-
 	if err != nil {
 		c.log.Fatal("ERROR setting auth ", err)
 
 	}
+
+	c.verbose = *verbose
 
 	c.r53 = route53.New(auth, *region, http.DefaultClient)
 
@@ -272,6 +280,8 @@ func main() {
 		if err != nil {
 			c.log.Fatal("ERROR deleting from resource record set ", err)
 		}
+	case "list":
+		printResourceRecordSet(rrs)
 	default:
 		usageFatal("ERROR action not implemented " + *action)
 	}
