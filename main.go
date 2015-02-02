@@ -16,7 +16,7 @@ import (
 )
 
 const defaultRegion = "us-east-1"
-const version = "0.2"
+const version = "0.3"
 
 type cli struct {
 	r53     *route53.Route53
@@ -60,11 +60,11 @@ func (c *cli) zoneIDByName(recordName string) (string, error) {
 				}
 				return zoneID, nil
 			}
-			if !*resp.IsTruncated {
-				return "", fmt.Errorf("zone %s not found", name)
-			}
-			req.Marker = resp.NextMarker
 		}
+		if !*resp.IsTruncated {
+			return "", fmt.Errorf("zone %s not found", name)
+		}
+		req.Marker = resp.NextMarker
 	}
 }
 
