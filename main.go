@@ -16,7 +16,7 @@ import (
 )
 
 const defaultRegion = "us-east-1"
-const version = ".01"
+const version = "0.2"
 
 type cli struct {
 	r53     *route53.Route53
