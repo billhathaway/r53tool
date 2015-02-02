@@ -1,0 +1,21 @@
+#!/bin/sh
+# build binary releases for OSX, linux, Windows
+
+# see http://dave.cheney.net/2013/07/09/an-introduction-to-cross-compilation-with-go-1-1
+# if you need help setting up your environment for cross-compiling
+
+version=`grep -i 'const version' main.go | awk -F\" '{ print $2 }'`
+for os in darwin linux windows
+do
+  for arch in amd64
+  do
+    echo "building for v${version} ${os} ${arch}"
+    GOOS=${os} GOARCH=${arch} go build -o r53tool.v${version}.${os}.${arch}
+    if [ $? -ne -0 ]; then
+       echo "cross-compile failed, see http://dave.cheney.net/2013/07/09/an-introduction-to-cross-compilation-with-go-1-1"
+       exit 1
+    fi
+  done
+done
+
+exit 0
